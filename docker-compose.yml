@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: itgc_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_DB: itgc_db
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d itgc_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  streamlit_app:
+    build: .
+    container_name: itgc_dashboard
+    ports:
+      - "8501:8501"
+    environment:
+      - DB_HOST=postgres_db
+      - DB_NAME=itgc_db
+      - DB_USER=postgres
+      - DB_PASSWORD=secretpassword
+      - DB_PORT=5432
+    depends_on:
+      postgres_db:
+        condition: service_healthy
